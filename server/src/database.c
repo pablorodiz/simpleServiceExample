@@ -214,7 +214,7 @@ t_pair database_retrieve_all(void)
 		else
 		{
 			//If key not in the list create new node for it
-			new = (t_pair) malloc(2*sizeof(char *)+sizeof(t_pair));
+			new = (t_pair) malloc(sizeof(struct pair));
 			new->name = malloc(strlen(key)+1);
 			strcpy(new->name, key);
 			new->value = malloc(strlen(val)+1);
