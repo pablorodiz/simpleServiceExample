@@ -30,7 +30,7 @@ int protocol_decode_message(char *msg, int msg_len, int sock)
 				while(child!=NULL)
 				{
 					//Valid key value pair found, store in the database
-					printf("Key: %s - Value: %s\n", child->name, child->txt);
+					//printf("Key: %s - Value: %s\n", child->name, child->txt);
 					if(database_store_value(child->name, child->txt)!=0) perror("Impossible to store value");
 					child = child->sibling;
 				}
@@ -38,6 +38,7 @@ int protocol_decode_message(char *msg, int msg_len, int sock)
 			//Retrieve message
 			else if(strcmp(ezxml_name(parsed_xml), "retrieve")==0)
 			{
+				ezxml_t response = ezxml_new("status");
 				ezxml_t child = ezxml_child(parsed_xml, "key");
 				t_pair list = NULL;
 				if(child==NULL)
@@ -47,9 +48,13 @@ int protocol_decode_message(char *msg, int msg_len, int sock)
 					t_pair v = list;
 					while (v!=NULL)
 					{
-						printf("Retrieved Key: %s - Value: %s\n", v->name, v->value);
-						v=v->next;
+						//Add node to XML structure
+						//printf("Retrieved Key: %s - Value: %s\n", v->name, v->value);
+						ezxml_t new_response_child = ezxml_add_child_d(response, v->name, 6);
+						new_response_child = ezxml_set_txt_d(new_response_child, v->value);
+						v = v->next;
 					}
+					database_retrieve_free(list);
 				}
 				else while(child!=NULL)
 				{
@@ -58,25 +63,30 @@ int protocol_decode_message(char *msg, int msg_len, int sock)
 					if(strcmp(child->name, "key")!=0 || database_retrieve_value(child->txt, value, sizeof value)!=0) perror("Impossible to retrieve value for key");
 					else
 					{
-						printf("Retrieved Key: %s - Value: %s\n", child->txt, value);
+						//Add node to XML structure
+						//printf("Retrieved Key: %s - Value: %s\n", child->txt, value);
+						ezxml_t new_response_child = ezxml_add_child_d(response, child->txt, 6);
+						new_response_child = ezxml_set_txt_d(new_response_child, value);
 					}
-
 					child = child->next;
 				}
 
-				//TODO Create xml response
-
-				//free structure and list space if any
-				if(list!=NULL) database_retrieve_free(list);
+				//Create xml string and free structure
+				char *xml_resp = ezxml_toxml(response);
+				ezxml_free(response);
 
 				//TODO prettify xml string
 
-				//TODO Send the response back to the client
+				//Send the response back to the client
+		        write(sock , xml_resp , strlen(xml_resp));
 
+		        //Free xml string space
+				free(xml_resp);
 			}
 			else puts("Wrong input, unknown operation");
 		}
 		else puts("Wrong input, operation not valid");
+		//Free XML parsed structure
 		ezxml_free(parsed_xml);
 	}
 	else
