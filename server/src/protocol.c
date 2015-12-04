@@ -75,23 +75,37 @@ int protocol_decode_message(char *msg, int msg_len, int sock)
 				char *xml_resp = ezxml_toxml(response);
 				ezxml_free(response);
 
-				//TODO prettify xml string
-
 				//Send the response back to the client
 		        write(sock , xml_resp , strlen(xml_resp));
 
 		        //Free xml string space
 				free(xml_resp);
 			}
-			else puts("Wrong input, unknown operation");
+			else
+			{
+				perror("Wrong input, unknown operation");
+				//Free XML parsed structure
+				ezxml_free(parsed_xml);
+				//Return error
+				return 1;
+			}
 		}
-		else puts("Wrong input, operation not valid");
+		else
+		{
+			perror("Wrong input, operation not valid");
+			//Free XML parsed structure
+			ezxml_free(parsed_xml);
+			//Return error
+			return 1;
+		}
 		//Free XML parsed structure
 		ezxml_free(parsed_xml);
 	}
 	else
 	{
-		puts("Wrong input, not valid XML");
+		perror("Wrong input, not valid XML");
+		//Return error
+		return 1;
 	}
 	return 0;
 }

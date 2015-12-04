@@ -98,6 +98,7 @@ void *connection_handler(void *socket_desc)
     free(socket_desc);
     int read_size;
     char client_message[2000];
+    //TODO handle buffer overflow in client message
 
     //Receive a message from client
     while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
@@ -110,7 +111,7 @@ void *connection_handler(void *socket_desc)
 		puts(client_message);
 
 		//Call protocol handler to decode message and act properly
-		int res = protocol_decode_message(client_message, read_size, sock);
+		if(protocol_decode_message(client_message, read_size, sock)!=0) break;
 
 		//clear the message buffer
 		memset(client_message, 0, 2000);
@@ -124,6 +125,12 @@ void *connection_handler(void *socket_desc)
     else if(read_size == -1)
     {
         perror("recv failed");
+        fflush(stdout);
+    }
+    else
+    {
+    	puts("Protocol error, client disconnected");
+    	fflush(stdout);
     }
 
     return 0;
