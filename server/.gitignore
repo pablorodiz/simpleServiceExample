@@ -1,4 +1,12 @@
 .cproject
 .project
 Debug
-
+tests/database.txt
+tests/connectivity_test.err
+tests/connectivity_test.out
+tests/retrieve_test.out
+tests/retrieve_test.err
+tests/retrieve_all_test.out
+tests/retrieve_all_test.err
+tests/update_test.out
+tests/update_test.err
