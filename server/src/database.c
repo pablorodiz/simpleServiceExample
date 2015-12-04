@@ -105,7 +105,7 @@ int database_store_value(char *name, char* value)
 
 	//Print data entry
 	fseek(data, 0, SEEK_END);
-	fwrite((const void*) new_data, 1, new_data_len, data);
+	fwrite((const void*) new_data, 1, new_data_len-1, data);
 
 	//Unlock the file
 	fflush(data);

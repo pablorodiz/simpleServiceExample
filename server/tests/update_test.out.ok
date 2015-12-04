@@ -1,0 +1,10 @@
+Server ready. Waiting for incoming connections...
+New client connected
+Data received:
+<update>
+<personsPassed>13</personsPassed>
+<lightCondition>bright</lightCondition>
+<humidity>53</humidiy>
+</update>
+
+Client disconnected
