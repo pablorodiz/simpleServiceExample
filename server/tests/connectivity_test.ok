@@ -3,5 +3,4 @@ New client connected
 Data received:
 hello
 
-Wrong input, operation not valid
-Client disconnected
+Protocol error, client disconnected

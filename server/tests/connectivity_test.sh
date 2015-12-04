@@ -9,7 +9,7 @@ echo "hello" | nc -q 2 127.0.0.1 6423
 disown $PID
 kill $PID
 #Check server response
-if [ -z "`diff connectivity_test.ok connectivity_test.out`" ] && [ -f `cat connectivity_test.err` ] 
+if [ -z "`diff connectivity_test.ok connectivity_test.out`" ] && [ -z "`diff connectivity_test.err connectivity_test.err.ok`" ] 
   then
     echo "Connectivity test OK"
     rm connectivity_test.out connectivity_test.err
