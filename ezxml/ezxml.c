@@ -703,7 +703,10 @@ char *ezxml_toxml_r(ezxml_t xml, char **s, size_t *len, size_t *max,
     while (*len + strlen(xml->name) + 4 > *max) // reallocate s
         *s = realloc(*s, *max += EZXML_BUFSIZE);
 
-    *len += sprintf(*s + *len, "<%s", xml->name); // open tag
+    //Indent tag if not root tag
+    if(xml->parent) *len += sprintf(*s + *len, "\n      <%s", xml->name); // open tag
+    else *len += sprintf(*s + *len, "<%s", xml->name); // open tag
+
     for (i = 0; xml->attr[i]; i += 2) { // tag attributes
         if (ezxml_attr(xml, xml->attr[i]) != xml->attr[i + 1]) continue;
         while (*len + strlen(xml->attr[i]) + 7 > *max) // reallocate s
@@ -733,7 +736,9 @@ char *ezxml_toxml_r(ezxml_t xml, char **s, size_t *len, size_t *max,
     while (*len + strlen(xml->name) + 4 > *max) // reallocate s
         *s = realloc(*s, *max += EZXML_BUFSIZE);
 
-    *len += sprintf(*s + *len, "</%s>", xml->name); // close tag
+    //New line for close tag if root tag
+    if(xml->parent) *len += sprintf(*s + *len, "</%s>", xml->name); // close tag
+    else *len += sprintf(*s + *len, "\n</%s>\n", xml->name); // close tag
 
     while (txt[off] && off < xml->off) off++; // make sure off is within bounds
     return (xml->ordered) ? ezxml_toxml_r(xml->ordered, s, len, max, off, attr)
