@@ -12,3 +12,4 @@ tests/update_test.out
 tests/update_test.err
 tests/update_test_database_check.out
 tests/retrieve_all_test.client
+tests/retrieve_test.client

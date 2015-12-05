@@ -1,0 +1,9 @@
+Server ready. Waiting for incoming connections...
+New client connected
+Data received:
+<retrieve>
+<key>personsPassed</key>
+<key>humidity</key>
+</retrieve>
+
+Client disconnected
