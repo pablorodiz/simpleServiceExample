@@ -58,15 +58,7 @@ int com_send_data(int sock, const char *msg, int msg_len)
 //Receive a data from the server
 int com_receive_data(int sock, char *buffer, int buffer_len)
 {
-    if( recv(sock , buffer , buffer_len , 0) < 0)
-    {
-       	utils_log("receive failed");
-        return 1;
-    }
-    else
-    {
-    	return 0;
-    }
+    return recv(sock , buffer , buffer_len , 0);
 }
 
 //Disconnect from server

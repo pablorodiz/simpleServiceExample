@@ -8,7 +8,6 @@
  ============================================================================
  */
 
-//#include <stdio.h> 		//printf
 #include <string.h>    	//strlen
 #include <utils.h>
 #include <communication.h>
@@ -16,12 +15,14 @@
 
 #define RECEIVE_BUFFER_SIZE	2000
 
+#define SERVER_ADDRESS	"127.0.0.1"
+
 //Constant XML prototype strings
 const char retrieve_all[] = "<retrieve/>";
 const char retrieve[] = "<retrieve>#</retrieve>";
 const char key[] = "<key>#</key>";
 const char update[] = "<update>#</update>";
-const char value[] = "<#>*</#>";
+//const char value[] = "<#>*</#>";
 //XML prototypes lenghts
 #define RETRIEVE_ALL_LEN 	11
 #define RETRIEVE_LEN		21
@@ -54,10 +55,7 @@ int main(int argc , char *argv[])
 			int retrieve_i=0;
 			int msg_i=0;
 			//Open parent tag
-			while(retrieve[retrieve_i]!='#')
-			{
-				message[msg_i++] = retrieve[retrieve_i++];
-			}
+			while(retrieve[retrieve_i]!='#') message[msg_i++] = retrieve[retrieve_i++];
 			retrieve_i++;
 			int j;
 			//Add key tag for each requested value
@@ -65,10 +63,7 @@ int main(int argc , char *argv[])
 			{
 				//Open key tag
 				int key_i=0;
-				while(key[key_i]!='#')
-				{
-					message[msg_i++] = key[key_i++];
-				}
+				while(key[key_i]!='#') message[msg_i++] = key[key_i++];
 				key_i++;
 				int arg_i = 0;
 				//Add text content for key tag
@@ -78,16 +73,10 @@ int main(int argc , char *argv[])
 					message[msg_i++] = (argv[j])[arg_i++];
 				}
 				//Close key tag
-				while(key[key_i]!='\0')
-				{
-					message[msg_i++] = key[key_i++];
-				}
+				while(key[key_i]!='\0')	message[msg_i++] = key[key_i++];
 			}
 			//Close parent tag
-			while(retrieve[retrieve_i]!='\0')
-			{
-				message[msg_i++] = retrieve[retrieve_i++];
-			}
+			while(retrieve[retrieve_i]!='\0') message[msg_i++] = retrieve[retrieve_i++];
 			//End string
 			message[msg_i] = '\0';
 			//utils_log(message);
@@ -105,21 +94,13 @@ int main(int argc , char *argv[])
 			int update_i=0;
 			msg_i=0;
 			//Open parent tag
-			while(update[update_i]!='#')
-			{
-				message[msg_i++] = update[update_i++];
-			}
+			while(update[update_i]!='#') message[msg_i++] = update[update_i++];
 			update_i++;
 			//Add key tag for each requested value
 			for(j=2; j<argc; j+=2)
 			{
 				//Open value tag
-				int value_i=0;
-				while(value[value_i]!='#')
-				{
-					message[msg_i++] = value[value_i++];
-				}
-				value_i++;
+				message[msg_i++] = '<';
 				int arg_i = 0;
 				//Add key name
 				while((argv[j])[arg_i]!='\0')
@@ -127,11 +108,8 @@ int main(int argc , char *argv[])
 					//TODO updated values and names get from command line. In real case names should be hard-coded and values read from sensors
 					message[msg_i++] = (argv[j])[arg_i++];
 				}
-				while(value[value_i]!='*')
-				{
-					message[msg_i++] = value[value_i++];
-				}
-				value_i++;
+				//End open key
+				message[msg_i++]='>';
 				//Add key value
 				arg_i = 0;
 				while((argv[j+1])[arg_i]!='\0')
@@ -139,11 +117,9 @@ int main(int argc , char *argv[])
 					//TODO updated values and names get from command line. In real case names should be hard-coded and values read from sensors
 					message[msg_i++] = (argv[j+1])[arg_i++];
 				}
-				while(value[value_i]!='#')
-				{
-					message[msg_i++] = value[value_i++];
-				}
-				value_i++;
+				//Start close key
+				message[msg_i++] = '<';
+				message[msg_i++] = '/';
 				//Add key name to close key
 				arg_i = 0;
 				while((argv[j])[arg_i]!='\0')
@@ -152,16 +128,10 @@ int main(int argc , char *argv[])
 					message[msg_i++] = (argv[j])[arg_i++];
 				}
 				//Close key tag
-				while(value[value_i]!='\0')
-				{
-					message[msg_i++] = value[value_i++];
-				}
+				message[msg_i++] = '>';
 			}
 			//Close parent tag
-			while(update[update_i]!='\0')
-			{
-				message[msg_i++] = update[update_i++];
-			}
+			while(update[update_i]!='\0') message[msg_i++] = update[update_i++];
 			//End string
 			message[msg_i] = '\0';
 			//utils_log(message);
@@ -172,7 +142,7 @@ int main(int argc , char *argv[])
 	if(message!=NULL)
 	{
 		//Connect to server
-		int sock = com_connect("127.0.0.1");
+		int sock = com_connect(SERVER_ADDRESS);
 
 		//Communicate with server
 		if(sock>=0)
@@ -187,14 +157,63 @@ int main(int argc , char *argv[])
 				char *server_reply = utils_malloc(RECEIVE_BUFFER_SIZE);
 				if(server_reply!=NULL)
 				{
-					if(com_receive_data(sock, server_reply, RECEIVE_BUFFER_SIZE)!=0)
+					int receive_len = com_receive_data(sock, server_reply, RECEIVE_BUFFER_SIZE);
+					if(receive_len < 0)
 					{
 						utils_log("recv failed");
 					}
 					else
 					{
-						utils_log("Server reply :");
-						utils_log(server_reply);
+						//Parse server answer
+						//utils_log("Server reply :");
+						//utils_log(server_reply);
+						//TODO I am not checking if answer is valid XML, just look for tag names and values
+						int i=0;
+						int first_tag = 0;
+						int tag_start = 0;
+						int value_start = 0;
+						while(i<receive_len)
+						{
+							//Look for tag starts
+							if(server_reply[i]=='<')
+							{
+								tag_start = i+1;
+								//Tag start is also value end if there is a previously stored value start
+								if((i-value_start)>1 && value_start!=0)
+								{
+									char *value = utils_malloc((i-value_start)+1);
+									memcpy(value, &server_reply[value_start],i-value_start);
+									value[i-value_start]='\0';
+									utils_log(value);
+									utils_free(value);
+									value_start = 0;
+								}
+							}
+							//Look for tag ends
+							if(server_reply[i]=='>')
+							{
+								//Discard root tag
+								if(first_tag==1)
+								{
+									//Discard closing tags
+									if(server_reply[tag_start]!='/')
+									{
+										char *tag = utils_malloc((i-tag_start)+1);
+										memcpy(tag, &server_reply[tag_start],i-tag_start);
+										tag[i-tag_start]='\0';
+										utils_log(tag);
+										utils_free(tag);
+										//Tag end is also the start for its value
+										value_start = i+1;
+									}
+								}
+								else
+								{
+									first_tag = 1;
+								}
+							}
+							i++;
+						}
 					}
 				}
 				else
