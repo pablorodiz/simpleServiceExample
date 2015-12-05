@@ -52,7 +52,7 @@ int main(int argc , char *argv[])
 			//Create message
 			message = utils_malloc(message_len);
 			int retrieve_i=0;
-			int msg_i;
+			int msg_i=0;
 			//Open parent tag
 			while(retrieve[retrieve_i]!='#')
 			{
@@ -93,6 +93,78 @@ int main(int argc , char *argv[])
 			//utils_log(message);
 			break;
 		case COMMAND_UPDATE:
+			//Determine message length
+			message_len = UPDATE_LEN + (VALUE_LEN * (argc-2)) + 1;
+			for(i=2; i<argc; i+=2)
+			{
+				message_len += 2 * strlen(argv[i]); //Name
+				message_len += strlen(argv[i]);		//value
+			}
+			//Create message
+			message = utils_malloc(message_len);
+			int update_i=0;
+			msg_i=0;
+			//Open parent tag
+			while(update[update_i]!='#')
+			{
+				message[msg_i++] = update[update_i++];
+			}
+			update_i++;
+			//Add key tag for each requested value
+			for(j=2; j<argc; j+=2)
+			{
+				//Open value tag
+				int value_i=0;
+				while(value[value_i]!='#')
+				{
+					message[msg_i++] = value[value_i++];
+				}
+				value_i++;
+				int arg_i = 0;
+				//Add key name
+				while((argv[j])[arg_i]!='\0')
+				{
+					//TODO updated values and names get from command line. In real case names should be hard-coded and values read from sensors
+					message[msg_i++] = (argv[j])[arg_i++];
+				}
+				while(value[value_i]!='*')
+				{
+					message[msg_i++] = value[value_i++];
+				}
+				value_i++;
+				//Add key value
+				arg_i = 0;
+				while((argv[j+1])[arg_i]!='\0')
+				{
+					//TODO updated values and names get from command line. In real case names should be hard-coded and values read from sensors
+					message[msg_i++] = (argv[j+1])[arg_i++];
+				}
+				while(value[value_i]!='#')
+				{
+					message[msg_i++] = value[value_i++];
+				}
+				value_i++;
+				//Add key name to close key
+				arg_i = 0;
+				while((argv[j])[arg_i]!='\0')
+				{
+					//TODO updated values and names get from command line. In real case names should be hard-coded and values read from sensors
+					message[msg_i++] = (argv[j])[arg_i++];
+				}
+				//Close key tag
+				while(value[value_i]!='\0')
+				{
+					message[msg_i++] = value[value_i++];
+				}
+			}
+			//Close parent tag
+			while(update[update_i]!='\0')
+			{
+				message[msg_i++] = update[update_i++];
+			}
+			//End string
+			message[msg_i] = '\0';
+			//utils_log(message);
 			break;
 		default:
 			return 1;
