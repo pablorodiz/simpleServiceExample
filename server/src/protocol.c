@@ -45,16 +45,19 @@ int protocol_decode_message(char *msg, int msg_len, int sock)
 				{
 					//Request all values from database
 					list = database_retrieve_all();
-					t_pair v = list;
-					while (v!=NULL)
+					if(list!=NULL)
 					{
-						//Add node to XML structure
-						//printf("Retrieved Key: %s - Value: %s\n", v->name, v->value);
-						ezxml_t new_response_child = ezxml_add_child_d(response, v->name, 6);
-						new_response_child = ezxml_set_txt_d(new_response_child, v->value);
-						v = v->next;
+						t_pair v = list;
+						while (v!=NULL)
+						{
+							//Add node to XML structure
+							//printf("Retrieved Key: %s - Value: %s\n", v->name, v->value);
+							ezxml_t new_response_child = ezxml_add_child_d(response, v->name, 6);
+							new_response_child = ezxml_set_txt_d(new_response_child, v->value);
+							v = v->next;
+						}
+						database_retrieve_free(list);
 					}
-					database_retrieve_free(list);
 				}
 				else while(child!=NULL)
 				{
