@@ -58,6 +58,7 @@ int com_send_data(int sock, const char *msg, int msg_len)
 //Receive a data from the server
 int com_receive_data(int sock, char *buffer, int buffer_len)
 {
+	//TODO make sure this call has a timeout
     return recv(sock , buffer , buffer_len , 0);
 }
 
