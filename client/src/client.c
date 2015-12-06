@@ -9,6 +9,7 @@
  */
 
 #include <string.h>    	//strlen
+#include <stdio.h>		//TODO printf, used only to mock up storage through printing to standard output
 #include <utils.h>
 #include <communication.h>
 #include <command.h>
@@ -23,7 +24,8 @@ const char retrieve[] = "<retrieve>#</retrieve>";
 const char key[] = "<key>#</key>";
 const char update[] = "<update>#</update>";
 //const char value[] = "<#>*</#>";
-//XML prototypes lenghts
+
+//XML prototype lengths
 #define RETRIEVE_ALL_LEN 	11
 #define RETRIEVE_LEN		21
 #define KEY_LEN				11
@@ -40,29 +42,28 @@ int main(int argc , char *argv[])
 	//Create client messages
 	switch (command)
 	{
-		case COMMAND_RETRIEVEALL:
+		int i, j, retrieve_i, update_i, msg_i, key_i;
+		case COMMAND_RETRIEVEALL: //Create XML message for RETRIEVE all values operation
 	        message_len = RETRIEVE_ALL_LEN+1;
 			message = utils_malloc(message_len);
 			if(message!=NULL) memcpy(message, retrieve_all, message_len);
 			break;
-		case COMMAND_RETRIEVE:
+		case COMMAND_RETRIEVE: //Create XML message for RETRIEVE operation
 			//Determine message length
 			message_len = RETRIEVE_LEN + (KEY_LEN * (argc-2)) + 1;
-			int i;
 			for(i=2; i<argc; i++) message_len += strlen(argv[i]);
 			//Create message
 			message = utils_malloc(message_len);
-			int retrieve_i=0;
-			int msg_i=0;
+			retrieve_i=0;
+			msg_i=0;
 			//Open parent tag
 			while(retrieve[retrieve_i]!='#') message[msg_i++] = retrieve[retrieve_i++];
 			retrieve_i++;
-			int j;
 			//Add key tag for each requested value
 			for(j=2; j<argc; j++)
 			{
 				//Open key tag
-				int key_i=0;
+				key_i=0;
 				while(key[key_i]!='#') message[msg_i++] = key[key_i++];
 				key_i++;
 				int arg_i = 0;
@@ -81,7 +82,7 @@ int main(int argc , char *argv[])
 			message[msg_i] = '\0';
 			//utils_log(message);
 			break;
-		case COMMAND_UPDATE:
+		case COMMAND_UPDATE: //Create XML message for UPDATE operation
 			//Determine message length
 			message_len = UPDATE_LEN + (VALUE_LEN * (argc-2)) + 1;
 			for(i=2; i<argc; i+=2)
@@ -91,7 +92,7 @@ int main(int argc , char *argv[])
 			}
 			//Create message
 			message = utils_malloc(message_len);
-			int update_i=0;
+			update_i=0;
 			msg_i=0;
 			//Open parent tag
 			while(update[update_i]!='#') message[msg_i++] = update[update_i++];
@@ -154,6 +155,7 @@ int main(int argc , char *argv[])
 			//Receive the reply from the server
 			if(command!=COMMAND_UPDATE)
 			{
+				//TODO Fixed size receive buffer. Might give problems with long answers
 				char *server_reply = utils_malloc(RECEIVE_BUFFER_SIZE);
 				if(server_reply!=NULL)
 				{
@@ -172,6 +174,7 @@ int main(int argc , char *argv[])
 						int first_tag = 0;
 						int tag_start = 0;
 						int value_start = 0;
+						char *name=NULL, *value=NULL;
 						while(i<receive_len)
 						{
 							//Look for tag starts
@@ -181,11 +184,11 @@ int main(int argc , char *argv[])
 								//Tag start is also value end if there is a previously stored value start
 								if((i-value_start)>1 && value_start!=0)
 								{
-									char *value = utils_malloc((i-value_start)+1);
-									memcpy(value, &server_reply[value_start],i-value_start);
-									value[i-value_start]='\0';
-									utils_log(value);
-									utils_free(value);
+									char *val = utils_malloc((i-value_start)+1);
+									memcpy(val, &server_reply[value_start],i-value_start);
+									val[i-value_start]='\0';
+									if(value==NULL) value = val;
+									else utils_free(value);
 									value_start = 0;
 								}
 							}
@@ -201,10 +204,29 @@ int main(int argc , char *argv[])
 										char *tag = utils_malloc((i-tag_start)+1);
 										memcpy(tag, &server_reply[tag_start],i-tag_start);
 										tag[i-tag_start]='\0';
-										utils_log(tag);
-										utils_free(tag);
+										if(name==NULL) name = tag;
+										else utils_free(tag);
 										//Tag end is also the start for its value
 										value_start = i+1;
+									}
+									else
+									{
+										//Closing tag, so we should have a complete key-value pair stored
+										//TODO this is only a mock-up. Retrieved parameters should be stored
+										if(name!=NULL && value!=NULL)
+										{
+											printf("%s=%s\n", name, value);
+										}
+										if(name!=NULL)
+										{
+											utils_free(name);
+											name = NULL;
+										}
+										if(value!=NULL)
+										{
+											utils_free(value);
+											value = NULL;
+										}
 									}
 								}
 								else
