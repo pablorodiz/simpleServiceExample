@@ -3,8 +3,7 @@
  Name        : client.c
  Author      : Pablo Rodiz Obaya
  Version     : 1.0
- Description : client example using sockets based on example client on
-  	  	  http://www.binarytides.com/server-client-example-c-sockets-linux/
+ Description : Client example that can retrieve or update values to service
  ============================================================================
  */
 
