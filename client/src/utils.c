@@ -30,14 +30,6 @@ void utils_log(const char *msg)
 	puts(msg);
 }
 
-/*int utils_time(void)
-{
-	__suseconds_t i;
-
-	struct timeval t0;
-	gettimeofday(&t0, 0);
-}
-*/
 void utils_usleep(long usec)
 {
 	usleep(usec);
